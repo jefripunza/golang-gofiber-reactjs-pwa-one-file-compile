@@ -28,7 +28,7 @@ if echo "$build_output" | grep -qi "error"; then
     exit 1
 fi
 
-build_output=$(go build 2>&1)
+build_output=$(yarn compile:win 2>&1)
 if echo "$build_output" | grep -q "^# "; then
     echo "$bracket"
     echo "# Kode Golang masih ada yang error !!"

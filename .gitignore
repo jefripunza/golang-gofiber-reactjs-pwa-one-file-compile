@@ -28,6 +28,9 @@ dev-dist
 .env
 
 # Compiled files
+backend
+backend.exe
+backend.app
 app
 app.exe
 app.app

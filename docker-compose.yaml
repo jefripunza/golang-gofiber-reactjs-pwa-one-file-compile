@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "1008:1234"
+    # volumes:
+    #   # setup file or folder
+    #   - /home/cloufina/service-name/assets:/app/assets
+    network_mode: bridge
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
