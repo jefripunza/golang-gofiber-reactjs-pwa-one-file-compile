@@ -6,7 +6,14 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "1008:1234"
+      - "7331:3003"
+    environment:
+      - SERVER_NAME=
+      - SECRET_KEY=
+
+      # inject on secret... 
+      - MONGO_URL=
+
     # volumes:
     #   # setup file or folder
     #   - /home/cloufina/service-name/assets:/app/assets

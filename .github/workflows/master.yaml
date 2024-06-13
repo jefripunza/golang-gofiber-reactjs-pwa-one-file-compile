@@ -1,0 +1,156 @@
+name: 🚀 Deploy App...
+
+# Controls when the workflow will run
+on: # master = production
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: ["master"] # master, development, staging
+  pull_request:
+    branches: ["master"] # master, development, staging
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  SNAPSHOT_VERSION: ${{ format('{0}-SNAPSHOT', github.event.number) }}
+
+jobs:
+  app-deploy:
+    name: 🚚 Build App...
+    runs-on: server-msi-windows
+    steps:
+      - name: Set Time Zone, Get start datetime & Template Top
+        run: |
+          TZ=Asia/Jakarta
+          echo "start_date=$(date +"%Y-%m-%d %T")" >> ${GITHUB_ENV}
+          echo "start_time=$(date +"%s")" >> ${GITHUB_ENV}
+          echo "template_top=➥ REPORTER (${{ github.run_number }})\n>>GIT...\nREPO: ${{ github.event.repository.name }}\nBRANCH: ${{ github.ref_name }}\nCOMMIT: ${{ github.event.commits[0].message }}\n>>USER...\nOWNER: ${{ github.repository_owner }}\nPUSHER: ${{ github.event.commits[0].committer.name }}\n>>SERVER...\nRUNNER: ${{ runner.name }} (${{ runner.os }} ${{ runner.arch }})\n" >> ${GITHUB_ENV}
+          echo "template_bottom=Please check https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}" >> ${GITHUB_ENV}
+          echo "status=STARING 🛫📡" >> ${GITHUB_ENV}
+
+      - name: Send start report
+        run: |
+          curl --insecure --location '${{ secrets.REPORT_GIT_URL }}' \
+            --header 'Content-Type: application/json' \
+            --header 'Authorization: Bearer ${{ secrets.REPORT_BEARER_TOKEN }}' \
+            --data-raw "{
+              \"group_id\": \"${{ secrets.REPORT_GROUP_ID }}\",
+              \"message\": \"${{ env.template_top }}STATUS: ${{ env.status }}\n\nTIME: ${{ env.start_date }}\"
+            }"
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+
+      - name: 🎉 Get latest code
+        uses: actions/checkout@v2
+
+      # - name: 🔎 SonarQube Checking...
+      #   uses: sonarsource/sonarqube-scan-action@master
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+
+      - name: Rename ENV...
+        run: |
+          mv .env.example .env
+
+      - name: Manual Replace
+        run: |
+          sed -i 's#ENVIRONMENT=#ENVIRONMENT=${{ secrets.ENVIRONMENT }}#g' .env
+
+          sed -i 's#SECRET_KEY=#SECRET_KEY=${{ secrets.SECRET_KEY }}#g' .env
+          sed -i 's#SERVER_PORT=#SERVER_PORT=${{ secrets.SERVER_PORT }}#g' .env
+
+          sed -i 's#JWT_EXPIRED_DAY=#JWT_EXPIRED_DAY=${{ secrets.JWT_EXPIRED_DAY }}#g' .env
+          sed -i 's#STAY_ALIVE_MINUTE=#STAY_ALIVE_MINUTE=${{ secrets.STAY_ALIVE_MINUTE }}#g' .env
+
+          sed -i 's#MONGO_URL=#MONGO_URL=${{ secrets.MONGO_URL }}#g' .env
+          sed -i 's#MONGO_DB_NAME=#MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}#g' .env
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+
+      - name: 📡 Docker Compose...
+        run: |
+          docker-compose pull
+          docker-compose up --force-recreate --build -d
+          docker image prune -f
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+
+      - name: Get end datetime & duration
+        if: success() || failure() || cancelled()
+        run: |
+          echo "end_date=$(date +'%Y-%m-%d %T')" >> $GITHUB_ENV
+          end_time=$(date +'%s')
+          start_time=${{ env.start_time }}
+          duration_seconds=$((end_time - start_time))
+          minutes=$((duration_seconds / 60))
+          seconds=$((duration_seconds % 60))
+          if (( duration_seconds >= 60 )); then
+            echo "formatted_duration=${minutes} min ${seconds} sec" >> $GITHUB_ENV
+          else
+            echo "formatted_duration=${seconds} sec" >> $GITHUB_ENV
+          fi
+
+      # If there status is success / failure / cancelled
+      - name: Send success report
+        if: success()
+        run: |
+          echo "status=DEPLOYED ✈️✅" >> ${GITHUB_ENV}
+      - name: Send failure report
+        if: failure()
+        run: |
+          echo "status=FAILURE 🛬❌" >> ${GITHUB_ENV}
+      - name: Send cancelled report
+        if: cancelled()
+        run: |
+          echo "status=CANCEL 🛬⛔" >> ${GITHUB_ENV}
+
+      # send a report
+      - name: Get end datetime
+        if: success() || failure() || cancelled()
+        run: |
+          curl --insecure --location '${{ secrets.REPORT_GIT_URL }}' \
+            --header 'Content-Type: application/json' \
+            --header 'Authorization: Bearer ${{ secrets.REPORT_BEARER_TOKEN }}' \
+            --data-raw "{
+              \"group_id\": \"${{ secrets.REPORT_GROUP_ID }}\",
+              \"message\": \"${{ env.template_top }}STATUS: ${{ env.status }}\n\nTIME: ${{ env.end_date }}\nDuration: ${{ env.formatted_duration }}\"
+            }"
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+
+      - name: Dump GitHub context
+        if: success() || failure() || cancelled()
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Dump job context
+        if: success() || failure() || cancelled()
+        run: echo '${{ toJSON(job) }}'
+      - name: Dump steps context
+        if: success() || failure() || cancelled()
+        run: echo '${{ toJSON(steps) }}'
+      - name: Dump runner context
+        if: success() || failure() || cancelled()
+        run: echo '${{ toJSON(runner) }}'
+      - name: Dump strategy context
+        if: success() || failure() || cancelled()
+        run: echo '${{ toJSON(strategy) }}'
+      - name: Dump matrix context
+        if: success() || failure() || cancelled()
+        run: echo '${{ toJSON(matrix) }}'
+
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------
+      # ----------------------------------------------------------------------

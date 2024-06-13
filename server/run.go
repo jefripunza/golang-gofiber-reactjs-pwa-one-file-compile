@@ -17,15 +17,16 @@ func cronStart() {
 }
 
 func Run(embeddedFiles embed.FS) {
-	var err error
+	// var err error
 
 	Env := util.Env{}
 	Env.Load()
-	err = Env.SetTimezone()
-	if err != nil {
-		log.Fatalf("error on set timezone: %s", err.Error())
-		return
-	}
+
+	// err = Env.SetTimezone()
+	// if err != nil {
+	// 	log.Fatalf("error on set timezone: %s", err.Error())
+	// 	return
+	// }
 
 	Dir := util.Dir{}
 	Dir.Make(variable.TempPath)

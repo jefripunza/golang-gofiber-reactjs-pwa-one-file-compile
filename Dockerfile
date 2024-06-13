@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.authors="jefriherditriyanto@gmail.com"
 # make the folder
 RUN mkdir /react-build
 WORKDIR /react-build
-COPY ./frontend /react-build
+COPY . .
 
 # Install the dependencies
 RUN yarn install
@@ -16,7 +16,7 @@ RUN yarn build
 # =============================================================================== #
 
 # --- 🛠️ golang as builder --- #
-FROM golang:1.18-alpine as be-builder
+FROM golang:1.22-alpine as be-builder
 
 #-> Setup Environment
 # ENV GOPATH /go
@@ -30,22 +30,24 @@ ENV CGO 0
 #-> 🌊 Install Require
 RUN apk add --no-cache \
     gcc \
-    musl-dev
+    musl-dev \
+    tzdata
 
 WORKDIR /build
-RUN rm -rf ./react-app
-RUN mkdir ./react-app
+RUN mkdir ./dist
 COPY . .
-COPY --from=fe-builder /react-build/dist/ ./react-app
+COPY --from=fe-builder /react-build/dist/ ./dist
 
 #-> 🌊 Install Golang Module
-RUN go mod download
+RUN go mod tidy
+
+# 💯 Configuration
+RUN sed -i 's/127.0.0.1:/:/g' /build/server/http/server.http.go
+RUN sed -i 's/localhost/host.docker.internal/g' /build/server/env/mongodb.env.go
+RUN sed -i 's/localhost/host.docker.internal/g' /build/server/env/rabbitmq.env.go
 
 #-> ⚒️ Build App
 RUN go build -o ./run
-
-#-> 💯 Configuration Environment (change target env)
-# RUN sed -i 's#localhost#host.docker.internal#g' .env
 
 # =============================================================================== #
 
@@ -60,10 +62,13 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repos
 RUN apk add --no-cache openssl curl nano ffmpeg
 
 COPY --from=be-builder /build/run     /app/run
-COPY --from=be-builder /build/.env    /app/.env
 
 # 💯 Last Configuration
-RUN sed -i 's/localhost/host.docker.internal/g' .env
+# COPY --from=be-builder /build/.env    /app/.env
+# RUN sed -i 's/localhost/host.docker.internal/g' .env
+
+# RUN cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
+#     && echo "Asia/Jakarta" > /etc/timezone
 
 RUN chmod +x ./run
 
