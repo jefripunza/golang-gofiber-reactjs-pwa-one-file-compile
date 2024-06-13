@@ -26,3 +26,8 @@ dev-dist
 
 # Environment file
 .env
+
+# Compiled files
+app
+app.exe
+app.app
