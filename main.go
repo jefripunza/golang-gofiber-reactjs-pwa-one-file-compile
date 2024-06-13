@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"backend/server"
+	"embed"
+)
+
+//go:embed dist/*
+var embeddedFiles embed.FS
 
 func main() {
-	fmt.Println("Hello guys...")
+	server.Run(embeddedFiles)
 }

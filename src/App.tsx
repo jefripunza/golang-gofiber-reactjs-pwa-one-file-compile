@@ -1,11 +1,23 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import appLogo from '/favicon.svg'
-import PWABadge from './PWABadge.tsx'
-import './App.css'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import appLogo from "/favicon.svg";
+import PWABadge from "./PWABadge.tsx";
+import "./App.css";
+import { hostname } from "./consts.ts";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState<number>(0);
+  const [response, setResponse] = useState<string>("???");
+
+  async function getHelloWorld() {
+    try {
+      const response = await fetch(`${hostname}/api/example`);
+      const res = await response.json();
+      setResponse(JSON.stringify(res));
+    } catch (error: any) {
+      setResponse(error.message);
+    }
+  }
 
   return (
     <>
@@ -22,6 +34,7 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
+        <button onClick={getHelloWorld}>response is {response}</button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
@@ -31,7 +44,7 @@ function App() {
       </p>
       <PWABadge />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

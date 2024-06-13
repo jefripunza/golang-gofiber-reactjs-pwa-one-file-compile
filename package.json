@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:react": "vite",
+    "dev:go": "go run main.go",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "build": "tsc && vite build",
     "compile:linux": "go build -o app",
     "compile:win": "go build -o app.exe",
+    "compile:test": "npm run lint && npm run build && npm run compile:win",
     "preview": "vite preview"
   },
   "dependencies": {
