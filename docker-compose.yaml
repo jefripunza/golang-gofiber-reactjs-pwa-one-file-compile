@@ -8,11 +8,12 @@ services:
     ports:
       - "7331:3003"
     environment:
+      # inject on secret... 
       - SERVER_NAME=
       - SECRET_KEY=
 
-      # inject on secret... 
       - MONGO_URL=
+      - MONGO_NAME=
 
     # volumes:
     #   # setup file or folder
