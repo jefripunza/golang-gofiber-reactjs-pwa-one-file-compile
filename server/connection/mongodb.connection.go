@@ -31,7 +31,7 @@ func (ref MongoDB) Connect() (*mongo.Client, context.Context, error) {
 	}
 
 	if !successConnectMessage {
-		log.Println("✅ Successfully connected to MongoDB")
+		log.Println("✅ MongoDB Connected")
 		successConnectMessage = true
 	}
 	return client, ctx, nil
