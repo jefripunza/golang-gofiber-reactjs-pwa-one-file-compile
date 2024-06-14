@@ -64,14 +64,24 @@ jobs:
           sed -i 's#ENVIRONMENT=#ENVIRONMENT=${{ secrets.ENVIRONMENT }}#g' docker-compose.yaml
 
           sed -i 's#SERVER_NAME=#SERVER_NAME=${{ secrets.SERVER_NAME }}#g' docker-compose.yaml
-          sed -i 's#SECRET_KEY=#SECRET_KEY=${{ secrets.SECRET_KEY }}#g' docker-compose.yaml
           sed -i 's#SERVER_PORT=#SERVER_PORT=${{ secrets.SERVER_PORT }}#g' docker-compose.yaml
+          sed -i 's#SECRET_KEY=#SECRET_KEY=${{ secrets.SECRET_KEY }}#g' docker-compose.yaml
 
           sed -i 's#JWT_EXPIRED_DAY=#JWT_EXPIRED_DAY=${{ secrets.JWT_EXPIRED_DAY }}#g' docker-compose.yaml
           sed -i 's#STAY_ALIVE_MINUTE=#STAY_ALIVE_MINUTE=${{ secrets.STAY_ALIVE_MINUTE }}#g' docker-compose.yaml
 
           sed -i 's#MONGO_URL=#MONGO_URL=${{ secrets.MONGO_URL }}#g' docker-compose.yaml
           sed -i 's#MONGO_DB_NAME=#MONGO_DB_NAME=${{ secrets.MONGO_DB_NAME }}#g' docker-compose.yaml
+
+          sed -i 's#DB_TYPE=#DB_TYPE=${{ secrets.DB_TYPE }}#g' docker-compose.yaml
+          sed -i 's#DB_HOST=#DB_HOST=${{ secrets.DB_HOST }}#g' docker-compose.yaml
+          sed -i 's#DB_PORT=#DB_PORT=${{ secrets.DB_PORT }}#g' docker-compose.yaml
+          sed -i 's#DB_USER=#DB_USER=${{ secrets.DB_USER }}#g' docker-compose.yaml
+          sed -i 's#DB_PASS=#DB_PASS=${{ secrets.DB_PASS }}#g' docker-compose.yaml
+          sed -i 's#DB_NAME=#DB_NAME=${{ secrets.DB_NAME }}#g' docker-compose.yaml
+          sed -i 's#DB_MIGRATION=#DB_MIGRATION=${{ secrets.DB_MIGRATION }}#g' docker-compose.yaml
+
+          sed -i 's#RABBIT_URL=#RABBIT_URL=${{ secrets.RABBIT_URL }}#g' docker-compose.yaml
 
       # ----------------------------------------------------------------------
       # ----------------------------------------------------------------------
