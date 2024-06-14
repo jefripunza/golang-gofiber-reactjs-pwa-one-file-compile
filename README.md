@@ -102,7 +102,8 @@ root
 ### Prasyarat Utama
 
 - [VSCode](https://code.visualstudio.com/)
-- [Node.js](https://nodejs.org/) dan npm
+- [GitBash](https://www.git-scm.com/downloads)
+- [Node.js](https://nodejs.org/)
 - [Golang](https://golang.org/)
 
 ### Prasyarat Khusus

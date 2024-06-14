@@ -49,13 +49,18 @@ function App() {
       </div>
       <h1>Golang + ReactJS + VitePWA + TS</h1>
       <h1>
-        <i>{`{ ${APP_NAME} }`}</i>
+        <i>{`{${APP_NAME}}`}</i>
       </h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
+        <button
+          style={{ margin: 3 }}
+          onClick={() => setCount((count) => count + 1)}
+        >
           count is {count}
         </button>
-        <button onClick={getHelloWorld}>response is {response}</button>
+        <button style={{ margin: 3 }} onClick={getHelloWorld}>
+          response is {response}
+        </button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
