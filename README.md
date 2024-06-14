@@ -141,6 +141,24 @@ root
     yarn dev:go
     ```
 
+## Menulis Kode dengan TypeScript
+
+Berikut adalah contoh komponen React sederhana menggunakan TypeScript:
+
+```typescript
+import React from 'react';
+
+interface Props {
+  message: string;
+}
+
+const HelloWorld: React.FC<Props> = ({ message }) => {
+  return <h1>{message}</h1>;
+};
+
+export default HelloWorld;
+```
+
 ## Konfigurasi VitePWA
 
 VitePWA dikonfigurasi di `vite.config.ts`. Berikut adalah contoh konfigurasi dasar:
@@ -183,24 +201,6 @@ export default defineConfig({
     },
   })],
 })
-```
-
-## Menulis Kode dengan TypeScript
-
-Berikut adalah contoh komponen React sederhana menggunakan TypeScript:
-
-```typescript
-import React from 'react';
-
-interface Props {
-  message: string;
-}
-
-const HelloWorld: React.FC<Props> = ({ message }) => {
-  return <h1>{message}</h1>;
-};
-
-export default HelloWorld;
 ```
 
 ## Penutup
