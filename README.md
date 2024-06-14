@@ -1,26 +1,11 @@
 # Golang + React + VitePWA + TypeScript
 
-<div class="image-container">
-  <img src="./src/assets/golang.svg" alt="Golang">
-  <img src="./src/assets/react.svg" alt="React">
-  <img src="./public/favicon.svg" alt="Golang">
-  <img src="./src/assets/typescript.svg" alt="TypeScript">
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+  <img src="./src/assets/golang.svg" alt="Golang" width="100" height="100">
+  <img src="./src/assets/react.svg" alt="React" width="100" height="100">
+  <img src="./public/favicon.svg" alt="Golang" width="100" height="100">
+  <img src="./src/assets/typescript.svg" alt="TypeScript" width="100" height="100">
 </div>
-
-<style>
-  .image-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px; /* Optional: Add some space between images */
-  }
-
-  .image-container img {
-      height: 100px; /* Adjust as needed */
-      width: 100px; /* Adjust as needed */
-      object-fit: contain; /* Ensure the images maintain their aspect ratio */
-  }
-</style>
 
 ## Deskripsi Proyek
 
