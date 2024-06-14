@@ -1,4 +1,4 @@
-# --- 🛠️ nodejs as builder --- #
+# --- 🛠️ nodejs as builder --- # 
 FROM node:18-alpine as fe-builder
 LABEL org.opencontainers.image.authors="jefriherditriyanto@gmail.com"
 
