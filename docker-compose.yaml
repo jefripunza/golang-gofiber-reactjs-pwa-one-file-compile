@@ -9,11 +9,27 @@ services:
       - "7331:3003"
     environment:
       # inject on secret... 
+      - ENVIRONMENT=
+
       - SERVER_NAME=
+      - SERVER_PORT=
       - SECRET_KEY=
+
+      - JWT_EXPIRED_DAY=
+      - STAY_ALIVE_MINUTE=
 
       - MONGO_URL=
       - MONGO_NAME=
+
+      - DB_TYPE=
+      - DB_HOST=
+      - DB_PORT=
+      - DB_USER=
+      - DB_PASS=
+      - DB_NAME=
+      - DB_MIGRATION=
+
+      - RABBIT_URL=
 
     # volumes:
     #   # setup file or folder
