@@ -150,6 +150,7 @@ Berikut adalah contoh komponen React sederhana menggunakan TypeScript:
 import React from 'react';
 
 interface Props {
+  children: React.ReactNode;
   message: string;
 }
 
