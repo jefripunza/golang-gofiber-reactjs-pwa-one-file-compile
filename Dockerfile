@@ -42,9 +42,11 @@ COPY --from=fe-builder /react-build/dist/ ./dist
 RUN go mod tidy
 
 # 💯 Configuration
-RUN sed -i 's/127.0.0.1:/:/g' /build/server/http/server.http.go
-RUN sed -i 's/localhost/host.docker.internal/g' /build/server/env/mongodb.env.go
-RUN sed -i 's/localhost/host.docker.internal/g' /build/server/env/rabbitmq.env.go
+RUN sed -i 's#127.0.0.1:#:#g' /build/server/http/server.http.go
+
+RUN for file in /build/server/env/*; do \
+    sed -i 's#localhost#host.docker.internal#g' "$file"; \
+    done
 
 #-> ⚒️ Build App
 RUN go build -o ./run
@@ -65,10 +67,7 @@ COPY --from=be-builder /build/run     /app/run
 
 # 💯 Last Configuration
 # COPY --from=be-builder /build/.env    /app/.env
-# RUN sed -i 's/localhost/host.docker.internal/g' .env
-
-# RUN cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
-#     && echo "Asia/Jakarta" > /etc/timezone
+# RUN sed -i 's#localhost#host.docker.internal#g' .env
 
 RUN chmod +x ./run
 
