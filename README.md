@@ -31,7 +31,7 @@ Proyek ini adalah aplikasi web modern yang menggabungkan backend yang dibangun d
 
 ## Struktur Direktori
 
-\`\`\`bash
+```bash
 root
 ├── cron
 │   ├── job
@@ -95,7 +95,7 @@ root
 ├── tsconfig.json
 ├── vite.config.ts
 └── ...
-\`\`\`
+```
 
 ## Cara Memulai
 
@@ -116,36 +116,36 @@ root
 ### Menjalankan Project
 
 1. Buat folder baru:
-    \`\`\`bash
+    ```bash
     mkdir new-project-name
     cd new-project-name
-    \`\`\`
+    ```
 2. Clone project kedalam project:
-    \`\`\`bash
+    ```bash
     git clone https://github.com/jefripunza/gorevits .
-    \`\`\`
+    ```
 3. Masuk ke VSCode:
-    \`\`\`bash
+    ```bash
     code .
-    \`\`\`
+    ```
 4. Instal dependensi dan kebutuhan:
-    \`\`\`bash
+    ```bash
     bash install.sh
-    \`\`\`
+    ```
 5. Jalankan project:
-    \`\`\`bash
+    ```bash
     # frontend
     yarn dev:react
 
     # backend
     yarn dev:go
-    \`\`\`
+    ```
 
 ## Konfigurasi VitePWA
 
-VitePWA dikonfigurasi di \`vite.config.ts\`. Berikut adalah contoh konfigurasi dasar:
+VitePWA dikonfigurasi di `vite.config.ts`. Berikut adalah contoh konfigurasi dasar:
 
-\`\`\`typescript
+```typescript
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -183,13 +183,13 @@ export default defineConfig({
     },
   })],
 })
-\`\`\`
+```
 
 ## Menulis Kode dengan TypeScript
 
 Berikut adalah contoh komponen React sederhana menggunakan TypeScript:
 
-\`\`\`typescript
+```typescript
 import React from 'react';
 
 interface Props {
@@ -201,7 +201,7 @@ const HelloWorld: React.FC<Props> = ({ message }) => {
 };
 
 export default HelloWorld;
-\`\`\`
+```
 
 ## Penutup
 
