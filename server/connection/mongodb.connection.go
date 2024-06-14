@@ -13,7 +13,7 @@ import (
 
 type MongoDB struct{}
 
-var successConnectMessage = false
+var mongoDbConnected = false
 
 func (ref MongoDB) Connect() (*mongo.Client, context.Context, error) {
 	ctx := context.Background()
@@ -30,9 +30,9 @@ func (ref MongoDB) Connect() (*mongo.Client, context.Context, error) {
 		return nil, ctx, fmt.Errorf("failed to connect to MongoDB: %v", err)
 	}
 
-	if !successConnectMessage {
+	if !mongoDbConnected {
 		log.Println("✅ MongoDB Connected")
-		successConnectMessage = true
+		mongoDbConnected = true
 	}
 	return client, ctx, nil
 }
