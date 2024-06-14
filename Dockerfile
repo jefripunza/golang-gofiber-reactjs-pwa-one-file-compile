@@ -43,7 +43,6 @@ RUN go mod tidy
 
 # 💯 Configuration
 RUN sed -i 's#127.0.0.1:#:#g' /build/server/http/server.http.go
-
 RUN for file in /build/server/env/*; do \
     sed -i 's#localhost#host.docker.internal#g' "$file"; \
     done
