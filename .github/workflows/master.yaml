@@ -17,7 +17,7 @@ env:
 jobs:
   app-deploy:
     name: 🚚 Build App...
-    runs-on: server-msi-windows
+    runs-on: server-msi-jefri
     steps:
       - name: Set Time Zone, Get start datetime & Template Top
         run: |
