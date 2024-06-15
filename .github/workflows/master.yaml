@@ -66,6 +66,7 @@ jobs:
           sed -i 's#SERVER_NAME=#SERVER_NAME=${{ secrets.SERVER_NAME }}#g' docker-compose.yaml
           sed -i 's#SERVER_PORT=#SERVER_PORT=${{ secrets.SERVER_PORT }}#g' docker-compose.yaml
           sed -i 's#SECRET_KEY=#SECRET_KEY=${{ secrets.SECRET_KEY }}#g' docker-compose.yaml
+          sed -i 's#VITE_APP_NAME=#VITE_APP_NAME=${{ secrets.VITE_APP_NAME }}#g' docker-compose.yaml
 
           sed -i 's#JWT_EXPIRED_DAY=#JWT_EXPIRED_DAY=${{ secrets.JWT_EXPIRED_DAY }}#g' docker-compose.yaml
           sed -i 's#STAY_ALIVE_MINUTE=#STAY_ALIVE_MINUTE=${{ secrets.STAY_ALIVE_MINUTE }}#g' docker-compose.yaml
