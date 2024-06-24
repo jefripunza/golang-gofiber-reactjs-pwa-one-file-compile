@@ -2,107 +2,27 @@ package util
 
 import (
 	"backend/server/env"
-	"bytes"
+	"crypto/aes"
 	"crypto/cipher"
 	"crypto/des"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"io"
+	"log"
+	"strings"
 )
 
-type Encryption struct{}
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
 
-func (ref Encryption) EncodeWithSecret(text string) (string, error) {
-	secretKey := env.GetSecretKey()
-	return ref.Encode(secretKey, text)
-}
-func (ref Encryption) DecodeWithSecret(encodedText string) (string, error) {
-	secretKey := env.GetSecretKey()
-	return ref.Decode(secretKey, encodedText)
-}
-
-func (ref Encryption) Encode(secretKey string, text string) (string, error) {
-	key := hashKey(secretKey)
-
-	// Layer 1: DES Encryption with original hashed key
-	cipherText, err := encryptMethod(key, text)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 2: DES Encryption with reversed hashed key
-	reversedKey := hashKey(reverseStrings(string(key)))
-	cipherText, err = encryptMethod(reversedKey, cipherText)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 3: DES Encryption with first half of the original hashed key rehashed
-	firstHalfKey := hashKey(string(key)[:len(key)/2])
-	cipherText, err = encryptMethod(firstHalfKey, cipherText)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 4: DES Encryption with second half of the original hashed key rehashed
-	secondHalfKey := hashKey(string(key)[len(key)/2:])
-	cipherText, err = encryptMethod(secondHalfKey, cipherText)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 5: Base64 Encoding
-	return base64.StdEncoding.EncodeToString([]byte(cipherText)), nil
-}
-
-func (ref Encryption) Decode(secretKey string, encodedText string) (string, error) {
-	key := hashKey(secretKey)
-
-	// Layer 5: Base64 Decoding
-	cipherTextBytes, err := base64.StdEncoding.DecodeString(encodedText)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 4: DES Decryption with second half of the original hashed key rehashed
-	plaintext, err := decryptMethod(hashKey(string(key)[len(key)/2:]), string(cipherTextBytes))
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 3: DES Decryption with first half of the original hashed key rehashed
-	plaintext, err = decryptMethod(hashKey(string(key)[:len(key)/2]), plaintext)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 2: DES Decryption with reversed hashed key
-	reversedKey := hashKey(reverseStrings(string(key)))
-	plaintext, err = decryptMethod(reversedKey, plaintext)
-	if err != nil {
-		return "", err
-	}
-
-	// Layer 1: DES Decryption with original hashed key
-	plaintext, err = decryptMethod(key, plaintext)
-	if err != nil {
-		return "", err
-	}
-
-	return plaintext, nil
-}
-
-func hashKey(key string) []byte {
+func hashKey(key string, length int) []byte {
 	hasher := sha256.New()
 	hasher.Write([]byte(key))
-	fullHash := hasher.Sum(nil)
-	// Truncate the hash to 24 bytes for Triple DES
-	return fullHash[:24]
+	hashed := hasher.Sum(nil)
+	return hashed[:length]
 }
 
-func reverseStrings(text string) string {
+func reverseString(text string) string {
 	runes := []rune(text)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
@@ -110,65 +30,202 @@ func reverseStrings(text string) string {
 	return string(runes)
 }
 
-func pad(src []byte, blockSize int) []byte {
-	padding := blockSize - len(src)%blockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padText...)
-}
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
 
-func unpad(src []byte) ([]byte, error) {
-	length := len(src)
-	if length == 0 {
-		return nil, fmt.Errorf("invalid padding size")
-	}
-	padding := int(src[length-1])
-	return src[:length-padding], nil
-}
-
-func encryptMethod(key []byte, plaintext string) (string, error) {
+func encryptTripleDES(plaintext string, secret_key string) (string, error) {
+	key := hashKey(secret_key, 24)
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
 		return "", err
 	}
 
-	plaintextBytes := pad([]byte(plaintext), block.BlockSize())
-	cipherText := make([]byte, des.BlockSize+len(plaintextBytes))
-	iv := cipherText[:des.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	// Padding plaintext agar panjangnya menjadi kelipatan 8 byte (ukuran blok DES)
+	padding := des.BlockSize - (len(plaintext) % des.BlockSize)
+	padtext := []byte(plaintext + strings.Repeat(string(byte(padding)), padding))
+
+	ciphertext := make([]byte, len(padtext))
+	mode := cipher.NewCBCEncrypter(block, key[:des.BlockSize])
+	mode.CryptBlocks(ciphertext, padtext)
+
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+func decryptTripleDES(ciphertext string, secret_key string) (string, error) {
+	key := hashKey(secret_key, 24)
+	block, err := des.NewTripleDESCipher(key)
+	if err != nil {
 		return "", err
 	}
 
+	ciphertextBytes, err := base64.StdEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return "", err
+	}
+
+	if len(ciphertextBytes) < des.BlockSize {
+		return "", fmt.Errorf("ciphertext too short")
+	}
+
+	mode := cipher.NewCBCDecrypter(block, key[:des.BlockSize])
+	mode.CryptBlocks(ciphertextBytes, ciphertextBytes)
+
+	// Unpad plaintext by removing padding bytes
+	padding := int(ciphertextBytes[len(ciphertextBytes)-1])
+	return string(ciphertextBytes[:len(ciphertextBytes)-padding]), nil
+}
+
+// -------------------------------------------------------------------
+
+func encryptAES(plaintext string, secret_key string) (string, error) {
+	key := hashKey(secret_key, 32)
+	iv := hashKey(secret_key, 16)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	// Padding plaintext agar panjangnya menjadi kelipatan 16 byte (ukuran blok AES)
+	padding := aes.BlockSize - (len(plaintext) % aes.BlockSize)
+	padtext := []byte(plaintext + strings.Repeat(string(byte(padding)), padding))
+
+	ciphertext := make([]byte, len(padtext))
 	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(cipherText[des.BlockSize:], plaintextBytes)
+	mode.CryptBlocks(ciphertext, padtext)
 
-	return base64.StdEncoding.EncodeToString(cipherText), nil
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func decryptMethod(key []byte, cipherText string) (string, error) {
-	cipherTextBytes, err := base64.StdEncoding.DecodeString(cipherText)
+func decryptAES(ciphertext string, secret_key string) (string, error) {
+	key := hashKey(secret_key, 32)
+	iv := hashKey(secret_key, 16)
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 
-	block, err := des.NewTripleDESCipher(key)
+	ciphertextBytes, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
 		return "", err
 	}
 
-	if len(cipherTextBytes) < des.BlockSize || len(cipherTextBytes)%des.BlockSize != 0 {
-		return "", fmt.Errorf("cipher text length must be a multiple of block size")
+	if len(ciphertextBytes) < aes.BlockSize {
+		panic("ciphertext too short")
 	}
-
-	iv := cipherTextBytes[:des.BlockSize]
-	cipherTextBytes = cipherTextBytes[des.BlockSize:]
 
 	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(cipherTextBytes, cipherTextBytes)
+	mode.CryptBlocks(ciphertextBytes, ciphertextBytes)
 
-	plaintextBytes, err := unpad(cipherTextBytes)
+	// Unpad plaintext by removing padding bytes
+	padding := int(ciphertextBytes[len(ciphertextBytes)-1])
+	return string(ciphertextBytes[:len(ciphertextBytes)-padding]), nil
+}
+
+// -------------------------------------------------------------------
+
+func encryptMethod(plainText, key string) (string, error) {
+	// fmt.Println("plainText:", plainText, "key:", key)
+
+	return encryptTripleDES(plainText, key)
+	// return encryptAES(plainText, key)
+}
+func decryptMethod(cipherText, key string) (string, error) {
+	return decryptTripleDES(cipherText, key)
+	// return decryptAES(cipherText, key)
+}
+
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+
+type Encryption struct{}
+
+func (ref Encryption) EncodeWithSecret(text string) (string, error) {
+	secretKey := env.GetSecretKey()
+	return ref.Encode(secretKey, text)
+}
+
+func (ref Encryption) DecodeWithSecret(encodedText string) (string, error) {
+	secretKey := env.GetSecretKey()
+	return ref.Decode(secretKey, encodedText)
+}
+
+func (ref Encryption) Encode(secretKey string, text string) (string, error) {
+	// Layer 1: AES Encryption with original hashed key
+	cipherText, err := encryptMethod(text, secretKey)
 	if err != nil {
 		return "", err
 	}
+	log.Println("GO Encode Layer 1:", cipherText)
 
-	return string(plaintextBytes), nil
+	// Layer 2: AES Encryption with reversed hashed key
+	reversedKey := reverseString(secretKey)
+	cipherText, err = encryptMethod(cipherText, reversedKey)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Encode Layer 2:", cipherText)
+
+	// Layer 3: AES Encryption with first half of the original hashed key rehashed
+	firstHalfKey := string(secretKey)[:len(secretKey)/2]
+	cipherText, err = encryptMethod(cipherText, firstHalfKey)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Encode Layer 3:", cipherText)
+
+	// Layer 4: AES Encryption with second half of the original hashed key rehashed
+	secondHalfKey := string(secretKey)[len(secretKey)/2:]
+	cipherText, err = encryptMethod(cipherText, secondHalfKey)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Encode Layer 4:", cipherText)
+
+	// Layer 5: Base64 Encoding
+	cipherText = base64.StdEncoding.EncodeToString([]byte(cipherText))
+	log.Println("GO Encode Layer 5:", cipherText)
+	return cipherText, nil
 }
+
+func (ref Encryption) Decode(secretKey string, encodedText string) (string, error) {
+	// Layer 5: Base64 Decoding
+	cipherTextBytes, err := base64.StdEncoding.DecodeString(encodedText)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Decode Layer 5:", string(cipherTextBytes))
+
+	// Layer 4: AES Decryption with second half of the original hashed key rehashed
+	plaintext, err := decryptMethod(string(cipherTextBytes), string(secretKey)[len(secretKey)/2:])
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Decode Layer 4:", plaintext)
+
+	// Layer 3: AES Decryption with first half of the original hashed key rehashed
+	plaintext, err = decryptMethod(plaintext, string(secretKey)[:len(secretKey)/2])
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Decode Layer 3:", plaintext)
+
+	// Layer 2: AES Decryption with reversed hashed key
+	reversedKey := reverseString(secretKey)
+	plaintext, err = decryptMethod(plaintext, reversedKey)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Decode Layer 2:", plaintext)
+
+	// Layer 1: AES Decryption with original hashed key
+	plaintext, err = decryptMethod(plaintext, secretKey)
+	if err != nil {
+		return "", err
+	}
+	log.Println("GO Decode Layer 1:", plaintext)
+
+	return plaintext, nil
+}
+
+// ------------------------------------------------------
+// ------------------------------------------------------
